@@ -35,6 +35,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # If using volume mount, this can be skipped
 COPY --from=sweph-downloader /sweph /app/sweph
 
+# Copy orbital elements file for fictitious bodies (Selena, etc.)
+COPY sweph/seorbel.txt /app/sweph/seorbel.txt
+
 # Copy requirements first for better caching
 COPY pyproject.toml ./
 
