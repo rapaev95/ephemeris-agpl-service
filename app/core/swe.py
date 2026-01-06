@@ -32,6 +32,19 @@ BODY_CODES: Dict[str, int] = {
     "Lilith": swe.MEAN_APOG,  # Alias for Mean Lilith
     # White Moon (Selena) - calculated as opposite of Lilith
     # Note: Swiss Ephemeris doesn't have Selena directly, we compute it separately
+    # Fictitious planets (Uranian / Hamburg School)
+    "Cupido": 40,  # Uranian: Cupido
+    "Hades": 41,  # Uranian: Hades
+    "Zeus": 42,  # Uranian: Zeus
+    "Kronos": 43,  # Uranian: Kronos
+    "Apollon": 44,  # Uranian: Apollon
+    "Admetos": 45,  # Uranian: Admetos
+    "Vulkanus": 46,  # Uranian: Vulkanus
+    "Poseidon": 47,  # Uranian: Poseidon
+    # Hypothetical trans-Neptunian
+    "Proserpina": 48,  # Isis-Transpluto (hypothetical planet)
+    "Transpluto": 48,  # Alias for Proserpina
+    "Isis": 48,  # Alias for Proserpina
 }
 
 # House system codes (Swiss Ephemeris uses single-byte ASCII codes)
