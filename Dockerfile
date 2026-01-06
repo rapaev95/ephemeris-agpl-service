@@ -3,15 +3,17 @@
 # Stage 1: Download Swiss Ephemeris data files
 FROM alpine:latest AS sweph-downloader
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl file
 
 # Download Swiss Ephemeris planetary and lunar data files
-# Source: https://www.astro.com/ftp/swisseph/ephe/
+# Source: ftp.astro.com via HTTPS (requires User-Agent header)
+# Files cover years 1800-2399
 RUN mkdir -p /sweph && \
     cd /sweph && \
-    curl -L "https://www.astro.com/ftp/swisseph/ephe/sepl_18.se1" -o sepl_18.se1 && \
-    curl -L "https://www.astro.com/ftp/swisseph/ephe/semo_18.se1" -o semo_18.se1 && \
-    ls -la /sweph
+    curl -L -A "Mozilla/5.0" "https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/sepl_18.se1" -o sepl_18.se1 && \
+    curl -L -A "Mozilla/5.0" "https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/semo_18.se1" -o semo_18.se1 && \
+    ls -la /sweph && \
+    file /sweph/*.se1
 
 # Stage 2: Python application
 FROM python:3.11-slim
