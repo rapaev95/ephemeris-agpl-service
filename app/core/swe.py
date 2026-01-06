@@ -30,8 +30,6 @@ BODY_CODES: Dict[str, int] = {
     "MeanLilith": swe.MEAN_APOG,  # Mean Black Moon Lilith
     "OscLilith": swe.OSCU_APOG,  # Oscillating (True) Black Moon Lilith
     "Lilith": swe.MEAN_APOG,  # Alias for Mean Lilith
-    # White Moon (Selena) - calculated as opposite of Lilith
-    # Note: Swiss Ephemeris doesn't have Selena directly, we compute it separately
     # Fictitious planets (Uranian / Hamburg School)
     "Cupido": 40,  # Uranian: Cupido
     "Hades": 41,  # Uranian: Hades
@@ -45,6 +43,9 @@ BODY_CODES: Dict[str, int] = {
     "Proserpina": 48,  # Isis-Transpluto (hypothetical planet)
     "Transpluto": 48,  # Alias for Proserpina
     "Isis": 48,  # Alias for Proserpina
+    # White Moon (Selena) - fictitious second moon with ~7 year period
+    "Selena": 56,  # White Moon Selena (SE_WHITE_MOON)
+    "WhiteMoon": 56,  # Alias for Selena
 }
 
 # House system codes (Swiss Ephemeris uses single-byte ASCII codes)
@@ -190,15 +191,16 @@ def calculate_positions(
     for body_name in bodies:
         try:
             # Special computed points
-            if body_name == "Selena" or body_name == "WhiteMoon":
-                # White Moon (Selena) = Lilith + 180°
-                lilith_lon, _ = calculate_position(jd_ut, "MeanLilith", flags)
-                longitude = (lilith_lon + 180.0) % 360.0
-            elif body_name == "SouthNode":
+            if body_name == "SouthNode":
                 # South Node (Ketu) = North Node + 180°
                 north_node_lon, _ = calculate_position(jd_ut, "TrueNode", flags)
                 longitude = (north_node_lon + 180.0) % 360.0
+            elif body_name == "SelenaLilith180":
+                # Alternative Selena calculation: Lilith + 180° (for compatibility)
+                lilith_lon, _ = calculate_position(jd_ut, "MeanLilith", flags)
+                longitude = (lilith_lon + 180.0) % 360.0
             else:
+                # All other bodies including Selena (code 56) from Swiss Ephemeris
                 longitude, _ = calculate_position(jd_ut, body_name, flags)
 
             positions[body_name] = longitude
