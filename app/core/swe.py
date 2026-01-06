@@ -20,23 +20,23 @@ BODY_CODES: Dict[str, int] = {
     "MeanNode": swe.MEAN_NODE,  # Mean North Node
 }
 
-# House system codes
-HOUSE_SYSTEMS: Dict[str, int] = {
-    "P": swe.PLACIDUS,  # Placidus
-    "K": swe.KOCH,  # Koch
-    "R": swe.REGIO,  # Regiomontanus
-    "C": swe.CAMPANUS,  # Campanus
-    "E": swe.EQUAL,  # Equal
-    "V": swe.VEHLOW,  # Vehlow
-    "W": swe.WHOLE_SIGN,  # Whole Sign
-    "X": swe.AXIAL_ROTATION,  # Axial Rotation
-    "H": swe.HORIZONTAL,  # Horizontal
-    "T": swe.TOPOCENTRIC,  # Topocentric
-    "M": swe.MORINUS,  # Morinus
-    "B": swe.ALCABITUS,  # Alcabitius
-    "Y": swe.PORPHYRIUS,  # Porphyrius
-    "L": swe.ALCABITUS,  # Alcabitius (alias)
-    "A": swe.ALCABITUS,  # Alcabitius (alias)
+# House system codes (Swiss Ephemeris uses single-byte ASCII codes)
+# Reference: https://www.astro.com/swisseph/swephprg.htm#_Toc505244836
+HOUSE_SYSTEMS: Dict[str, bytes] = {
+    "P": b'P',  # Placidus
+    "K": b'K',  # Koch
+    "R": b'R',  # Regiomontanus
+    "C": b'C',  # Campanus
+    "E": b'E',  # Equal (cusp 1 = Asc)
+    "V": b'V',  # Vehlow equal (Asc in middle of house 1)
+    "W": b'W',  # Whole Sign
+    "X": b'X',  # Axial Rotation / Meridian
+    "H": b'H',  # Azimuthal / Horizontal
+    "T": b'T',  # Topocentric (Polich/Page)
+    "M": b'M',  # Morinus
+    "B": b'B',  # Alcabitius
+    "Y": b'Y',  # APC houses
+    "O": b'O',  # Porphyrius
 }
 
 _ephe_path_initialized = False
@@ -76,7 +76,7 @@ def get_body_code(body_name: str) -> int:
     return BODY_CODES[body_name]
 
 
-def get_house_system_code(house_system: str) -> int:
+def get_house_system_code(house_system: str) -> bytes:
     """
     Get Swiss Ephemeris house system code from name.
 
@@ -84,7 +84,7 @@ def get_house_system_code(house_system: str) -> int:
         house_system: House system code (e.g., "P" for Placidus)
 
     Returns:
-        Swiss Ephemeris house system code
+        Swiss Ephemeris house system code as bytes
 
     Raises:
         ValueError: If house system is not supported
@@ -188,23 +188,21 @@ def calculate_houses(
 
     house_system_code = get_house_system_code(house_system)
 
-    # Calculate houses
-    result = swe.houses(jd_ut, lat, lon, house_system_code)
+    # Calculate houses using pyswisseph
+    # swe.houses() returns (cusps_tuple, ascmc_tuple)
+    # cusps_tuple: 12 house cusps (index 0-11 = houses 1-12)
+    # ascmc_tuple: [0]=Asc, [1]=MC, [2]=ARMC, [3]=Vertex, [4]=equatorial Asc, etc.
+    cusps, ascmc = swe.houses(jd_ut, lat, lon, house_system_code)
 
-    if result[0] < 0:
-        raise RuntimeError(f"Swiss Ephemeris error {result[0]} for houses calculation")
-
-    # result[1] contains cusps (13 elements: 0-12, where 0 is always 0)
-    # result[2] contains ascmc (Ascendant, MC, etc.)
-    cusps = list(result[1])
-    ascmc = result[2]
+    # Convert to list and prepend 0 to match expected format (index = house number)
+    cusps_list = [0.0] + list(cusps)
 
     angles = {
         "asc": ascmc[0],  # Ascendant
         "mc": ascmc[1],  # MC (Midheaven)
     }
 
-    return cusps, angles
+    return cusps_list, angles
 
 
 def calculate_sun_position(jd_ut: float) -> float:
