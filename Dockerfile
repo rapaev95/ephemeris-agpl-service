@@ -5,13 +5,17 @@ FROM alpine:latest AS sweph-downloader
 
 RUN apk add --no-cache curl file
 
-# Download Swiss Ephemeris planetary and lunar data files
-# Source: ftp.astro.com via HTTPS (requires User-Agent header)
+# Download Swiss Ephemeris data files
+# Source: Official swisseph GitHub repository
 # Files cover years 1800-2399
 RUN mkdir -p /sweph && \
     cd /sweph && \
+    # Main planetary ephemeris (Sun, Moon, Mercury-Pluto)
     curl -L -A "Mozilla/5.0" "https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/sepl_18.se1" -o sepl_18.se1 && \
+    # Moon ephemeris (detailed lunar data)
     curl -L -A "Mozilla/5.0" "https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/semo_18.se1" -o semo_18.se1 && \
+    # Asteroid ephemeris (Chiron, Ceres, Pallas, Juno, Vesta)
+    curl -L -A "Mozilla/5.0" "https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/seas_18.se1" -o seas_18.se1 && \
     ls -la /sweph && \
     file /sweph/*.se1
 

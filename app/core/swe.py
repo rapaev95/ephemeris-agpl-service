@@ -6,6 +6,7 @@ import swisseph as swe
 
 # Swiss Ephemeris body constants
 BODY_CODES: Dict[str, int] = {
+    # Classical planets
     "Sun": swe.SUN,
     "Moon": swe.MOON,
     "Mercury": swe.MERCURY,
@@ -16,8 +17,21 @@ BODY_CODES: Dict[str, int] = {
     "Uranus": swe.URANUS,
     "Neptune": swe.NEPTUNE,
     "Pluto": swe.PLUTO,
-    "TrueNode": swe.TRUE_NODE,  # True North Node
+    # Lunar nodes
+    "TrueNode": swe.TRUE_NODE,  # True North Node (Rahu)
     "MeanNode": swe.MEAN_NODE,  # Mean North Node
+    # Asteroids and minor bodies
+    "Chiron": swe.CHIRON,  # Chiron (2060)
+    "Ceres": swe.CERES,  # Ceres (1)
+    "Pallas": swe.PALLAS,  # Pallas (2)
+    "Juno": swe.JUNO,  # Juno (3)
+    "Vesta": swe.VESTA,  # Vesta (4)
+    # Lunar apogee/perigee (Lilith)
+    "MeanLilith": swe.MEAN_APOG,  # Mean Black Moon Lilith
+    "OscLilith": swe.OSCU_APOG,  # Oscillating (True) Black Moon Lilith
+    "Lilith": swe.MEAN_APOG,  # Alias for Mean Lilith
+    # White Moon (Selena) - calculated as opposite of Lilith
+    # Note: Swiss Ephemeris doesn't have Selena directly, we compute it separately
 }
 
 # House system codes (Swiss Ephemeris uses single-byte ASCII codes)
@@ -162,7 +176,18 @@ def calculate_positions(
 
     for body_name in bodies:
         try:
-            longitude, _ = calculate_position(jd_ut, body_name, flags)
+            # Special computed points
+            if body_name == "Selena" or body_name == "WhiteMoon":
+                # White Moon (Selena) = Lilith + 180°
+                lilith_lon, _ = calculate_position(jd_ut, "MeanLilith", flags)
+                longitude = (lilith_lon + 180.0) % 360.0
+            elif body_name == "SouthNode":
+                # South Node (Ketu) = North Node + 180°
+                north_node_lon, _ = calculate_position(jd_ut, "TrueNode", flags)
+                longitude = (north_node_lon + 180.0) % 360.0
+            else:
+                longitude, _ = calculate_position(jd_ut, body_name, flags)
+
             positions[body_name] = longitude
         except (ValueError, RuntimeError) as e:
             raise ValueError(f"Error calculating {body_name}: {str(e)}")
