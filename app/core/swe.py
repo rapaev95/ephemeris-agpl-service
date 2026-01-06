@@ -114,13 +114,17 @@ def calculate_position(
     initialize_ephemeris_path()
 
     body_code = get_body_code(body_name)
-    result = swe.calc_ut(jd_ut, body_code, flags)
 
-    if result[0] < 0:
-        raise RuntimeError(f"Swiss Ephemeris error {result[0]} for {body_name}")
+    # pyswisseph.calc_ut returns (xx, retflag) where:
+    # xx = tuple of 6 floats: [lon, lat, dist, lon_speed, lat_speed, dist_speed]
+    # retflag = return flags (negative on error)
+    xx, retflag = swe.calc_ut(jd_ut, body_code, flags)
 
-    longitude = result[1][0]  # Ecliptic longitude
-    speed = result[1][1] if len(result[1]) > 1 else None  # Speed
+    if retflag < 0:
+        raise RuntimeError(f"Swiss Ephemeris error {retflag} for {body_name}")
+
+    longitude = xx[0]  # Ecliptic longitude
+    speed = xx[3] if len(xx) > 3 else None  # Longitude speed
 
     return longitude, speed
 
