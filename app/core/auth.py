@@ -2,7 +2,7 @@
 
 import os
 from typing import Optional
-from fastapi import Header, HTTPException, status
+from fastapi import Security, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from .errors import raise_unauthorized
@@ -49,13 +49,13 @@ def verify_token(token: str) -> bool:
 
 
 async def require_auth(
-    authorization: Optional[HTTPAuthorizationCredentials] = Header(None),
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(security),
 ) -> str:
     """
     Dependency for protected endpoints that require authentication.
 
     Args:
-        authorization: Authorization header from request
+        credentials: Bearer token credentials from Authorization header
 
     Returns:
         The verified token
@@ -63,10 +63,10 @@ async def require_auth(
     Raises:
         HTTPException: If token is missing or invalid
     """
-    if not authorization:
+    if not credentials:
         raise_unauthorized("Missing authorization header")
 
-    token = authorization.credentials
+    token = credentials.credentials
     if not verify_token(token):
         raise_unauthorized("Invalid authorization token")
 
